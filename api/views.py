@@ -164,9 +164,9 @@ class UserViewset(generics.GenericAPIView):
 
 
    
-
+#  ....>
 class article_list(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
 
     def get(self, request):
@@ -194,46 +194,49 @@ class article_details(APIView):
 
     def get (self, request, id):
         article = self.get_object(id) 
-        serializer = ArticleSerializer(article  )
+        serializer = ArticleSerializer(article)
         return Response(serializer.data)
-
-
-    def put(self, request, id):
-        article = self.get_object(id) 
-        serializer = ArticleSerializer(article, data= request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-    def delete(self, request, id):
-        article = self.get_object(id)
-        article.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
             
 # --->
 
 
 # I wanted User to get Each Article posted by each 
 
-class Userarticle_details(APIView):     
+class userarticle_list(APIView):
+    # permission_classes = [IsAuthenticated]
+    def get(self, request):
+        article = Article.objects.owne_id() 
+        serializer = ArticleSerializer(article, many=True)
+        return Response(serializer.data)
+    
 
-    def get_object(self, id):
+    def post(self, request):
+        serializer = ArticleSerializer(data= request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_204_CREATE)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+class userarticle_details(APIView):     
+
+    def get_object(self,owner_id):
         try:
-            return  Article.objects.get(id=id)
+            return  Article.objects.get(owner_id=owner_id)
 
         except Article.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-    def get (self, request, id):
-        article = self.get_object(id) 
-        serializer = ArticleSerializer(article  )
+    def get (self, request, owner_id):
+        article = self.get_object(owner_id) 
+        serializer = ArticleSerializer(article)
         return Response(serializer.data)
 
 
-    def put(self, request, id):
-        article = self.get_object(id) 
+    def put(self, request, owner_id):
+        article = self.get_object(owner_id) 
         serializer = ArticleSerializer(article, data= request.data)
         if serializer.is_valid():
             serializer.save()
@@ -241,10 +244,11 @@ class Userarticle_details(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-    def delete(self, request, id):
-        article = self.get_object(id)
+    def delete(self, request, owner_id):
+        article = self.get_object(owner_id)
         article.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
             
 
 # Create your views here.
