@@ -1,41 +1,78 @@
 
 from .models import Article
 from .serializers import ArticleSerializer
-
+from rest_framework import permissions
 
 # from django.http import JsonResponse
 # from rest_framework.parsers import JSONParser
 
 # from rest_framework.decorators import api_view
 # from rest_framework.response import Response
-# from rest_framework import status
+from rest_framework import status
 
-# from rest_framework.decorators import APIView
-# from rest_framework import generics, mixins
+from rest_framework.decorators import APIView
+from rest_framework import generics, serializers
 
 
 
 from rest_framework import viewsets
-# from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404
 
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated      
+
 
 
 from django.contrib.auth.models import User
-from .serializers import UserSerializer
+from .serializers import RegisterSerializer
+from rest_framework import viewsets,status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+import uuid 
 
 
-class articleViewset(viewsets.ModelViewSet):
-    queryset = Article.objects.all()
-    # permission_classes = [IsAuthenticated]
-    serializer_class = ArticleSerializer
-    # authentication_classes = (TokenAuthentication, )
+# from rest_framework.authtoken.serializers import AuthTokenSerializer
+# from rest_framework.authtoken.views import Token 
 
 
-class UserViewset(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+
+# class articleViewset(viewsets.ModelViewSet):
+#     queryset = Article.objects.all() 
+#     permission_classes = [IsAuthenticated]
+#     serializer_class = ArticleSerializer
+#     authentication_classes = (TokenAuthentication, )
+
+
+
+
+class UserViewset(generics.GenericAPIView):
+    serializer_class = RegisterSerializer
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        # serializer.is_valid(raise_exception=True)
+        # serializer.save()
+        if(serializer.is_valid()):
+            serializers.save()
+            return Response({
+                'RequestId': str(uuid.uuid4()),
+                'massage': "User Created succ",
+                
+                
+                "User": serializer.data}, status = status.HTTP_201_CREATED
+                )
+        return Response({"Error": serializers.errors}, status= status.HTTP_400_BAD_REQUEST)
+
+
+        
+        
+
+
+
+
+          
+
+
+
 
 # viewset mixins  ----> 
 
@@ -47,40 +84,38 @@ class UserViewset(viewsets.ModelViewSet):
 
 # end --->
 
-#class ViewSet -->
+# class ViewSet -->
 # class articleViewset(viewsets.ViewSet):
 #     def list(self, request):
 #         article = Article.objects.all()
 #         serializer = ArticleSerializer(article, many=True)
 #         return Response(serializer.data)
 #     def create(self, request):
-#         serializer = ArticleSerializer(data=request.data)
+#         serializer = ArticleSerializer(data=request.data) 
 #         if serializer.is_valid():
 #             serializer.save()
 #             return Response(serializer.data, status=status.HTTP_201_CREATED)
 #             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 #     def retrieve(self, request, pk=None):
-#         queryset = Article.objects.all()
-#         article = get_object_or_404(queryset, pk=pk)
+#         queryset = Article.objects.filter()
+#         article = get_object_or_404(queryset,owner_id=request.user)
 #         serializer = ArticleSerializer(article)
 #         return Response(serializer.data)
 
 #     def update(self, request, pk=None):
-#         article = Article.objects.get(pk=pk)
+#         article = Article.objects.filter(owner_id=request.user)
 #         serializer = ArticleSerializer(article, data=request.data)
 #         if serializer.is_valid():
 #             serializer.save()
 #             return Response(serializer.data, status=status.HTTP_201_CREATED)
-#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   
 
 #     def destroy(self, request, pk=None):
-#         article = Article.objects.get(pk=pk)
-
+#         article = Article.objects.filter(owne_id=request.user)
 #         article.delete()
 #         return Response(status=status.HTTP_204_NO_CONTENT)
-    #--end -->  
+#     # --end -->  
 
 
 
@@ -130,52 +165,87 @@ class UserViewset(viewsets.ModelViewSet):
 
    
 
-#     class article_list(APIView): ---->
+class article_list(APIView):
+    permission_classes = [IsAuthenticated]
 
-#     def get(self, request):
-#         article = Article.objects.all() 
-#         serializer = ArticleSerializer(article, many=True)
-#         return Response(serializer.data)
+
+    def get(self, request):
+        article = Article.objects.all() 
+        serializer = ArticleSerializer(article, many=True)
+        return Response(serializer.data)
     
 
-#     def post(self, request):
-#         serializer = ArticleSerializer(data= request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data, status=status.HTTP_204_CREATE)
-#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request):
+        serializer = ArticleSerializer(data= request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_204_CREATE)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# class article_details(APIView):     
+class article_details(APIView):     
 
-#     def get_object(self, id):
-#         try:
-#             return  Article.objects.get(id=id)
+    def get_object(self, id):
+        try:
+            return  Article.objects.get(id=id)
 
-#         except Article.DoesNotExist:
-#             return Response(status=status.HTTP_404_NOT_FOUND)
+        except Article.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-#     def get (self, request, id):
-#         article = self.get_object(id) 
-#         serializer = ArticleSerializer(article  )
-#         return Response(serializer.data)
-
-
-#     def put(self, request, id):
-#         article = self.get_object(id) 
-#         serializer = ArticleSerializer(article, data= request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def get (self, request, id):
+        article = self.get_object(id) 
+        serializer = ArticleSerializer(article  )
+        return Response(serializer.data)
 
 
-#     def delete(self, request, id):
-#         article = self.get_object(id)
-#         article.delete()
-#         return Response(status=status.HTTP_204_NO_CONTENT)
+    def put(self, request, id):
+        article = self.get_object(id) 
+        serializer = ArticleSerializer(article, data= request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+    def delete(self, request, id):
+        article = self.get_object(id)
+        article.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
             
-#--->
+# --->
+
+
+# I wanted User to get Each Article posted by each 
+
+class Userarticle_details(APIView):     
+
+    def get_object(self, id):
+        try:
+            return  Article.objects.get(id=id)
+
+        except Article.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+    def get (self, request, id):
+        article = self.get_object(id) 
+        serializer = ArticleSerializer(article  )
+        return Response(serializer.data)
+
+
+    def put(self, request, id):
+        article = self.get_object(id) 
+        serializer = ArticleSerializer(article, data= request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+    def delete(self, request, id):
+        article = self.get_object(id)
+        article.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+            
 
 # Create your views here.
 #---->

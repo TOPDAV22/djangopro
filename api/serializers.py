@@ -4,25 +4,39 @@ from .models import Article
 from django.contrib.auth.models import User
 from rest_framework.authtoken.views import Token 
 
+from django.core.exceptions import ValidationError
+from uuid import uuid4
+from django.db.models import Q
+from rest_framework.validators import UniqueValidator
 
 
 class ArticleSerializer(serializers.ModelSerializer):
     
     class  Meta:
-        model = Article
+        model = Article 
         fields = '__all__'
 
 
-class UserSerializer(serializers.ModelSerializer):
+class RegisterSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(max_length=20, min_length=6)
+    password = serializers.CharField(max_length=100, write_only=True)
+    username = serializers.CharField(max_length=50,min_length=6)
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'password']
+        fields = ['first_name','email','username', 'password']
 
-        extra_kwargs = {'password':{
-            'write_only': True,
-            'required': True
-        }}
+    def validate (self, args):
+        email = args.get('email', None)
+        username = args.get ('username', None)
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError({'email':('email already used')})
+        if User.objects.filter(username=username).exists():
+            raise serializers.ValidationError({'username':('username already used')})
+        return super().validate(args)
+
+      
     def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
-        Token.objects.create(user=user)
-        return user 
+       
+        return User.objects.create_User(**validated_data)
+
