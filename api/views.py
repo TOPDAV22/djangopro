@@ -205,7 +205,7 @@ class article_details(APIView):
 class userarticle_list(APIView):
     # permission_classes = [IsAuthenticated]
     def get(self, request):
-        article = Article.objects.owne_id() 
+        article = Article.objects.owner_id() 
         serializer = ArticleSerializer(article, many=True)
         return Response(serializer.data)
     
